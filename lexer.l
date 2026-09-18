@@ -5,6 +5,24 @@
     #include <cstdio>
 %}
 
+/* ============================================================
+   Именованные регулярные выражения
+   ============================================================ */
+
+DIGIT                  [0-9]
+DECIMAL_DIGITS         {DIGIT}[0-9_]*
+IDENTIFIER_TEXT        [A-Za-z][A-Za-z0-9_$]*
+KEYWORD_PART           {IDENTIFIER_TEXT}:
+SYMBOL_TEXT            [A-Za-z_$:][A-Za-z0-9_$:]*
+BINARY_CHARACTER       [%&*+,/<=>?@\\~|-]
+BINARY_SELECTOR_TEXT   {BINARY_CHARACTER}{1,2}
+
+/* лишний хвост возвращаем через yyless */
+NUMBER_TEXT            {DECIMAL_DIGITS}(r-?[0-9A-Z_]*)?(\.[0-9A-Z_]+)?([edqs]-?[0-9_]*)?[A-Za-z_$]?
+
+SPACES                 [ \t\r\n\f]+
+CHARACTER              (.|\n)
+
 %%
 
     /* ============================================================
