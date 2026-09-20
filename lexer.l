@@ -2,7 +2,174 @@
 %option noinput nounput nodefault nounistd 8bit
 
 %{
+    // потом в buffer h
+    #include <cmath>
+    #include <cstddef>
+    #include <stdexcept>
+    #include <string>
+    #include <variant>
+
+    enum TokenKind {
+        IDENTIFIER = 256, LEX_ERROR
+    };
+
+    struct Position {
+        std::size_t line = 1, column = 1, offset = 0;
+    };
+
+    // добавить точность для целых больше long long?
+    using IntegerValue = long long;
+
+    // добавить точность для scaled decimal?
+    struct DecimalValue {
+        double value;
+        std::size_t scale;
+    };
+
+    using TokenValue = std::variant<std::monostate, IntegerValue, double,
+                                    DecimalValue, char, bool, std::string>;
+
+    struct Token {
+        TokenKind type;
+        TokenValue value;
+        std::string details;
+        std::string lexeme;
+        Position start, end;
+    };
+
+    class Buffer {
+    public:
+        Position position;
+        Position tokenStart;
+        std::string lexeme;
+
+        void trackPosition(const char* text, std::size_t length) {
+            tokenStart = position;
+
+            lexeme.assign(text, length);
+
+            for (std::size_t i = 0; i < length; ++i) {
+                unsigned char c = text[i];
+                ++position.offset;
+
+                if (c == '\r') {
+                    ++position.line;
+                    position.column = 1;
+                } else if (c == '\n') {
+                    if (!previousCR) ++position.line;
+                    position.column = 1;
+                } else {
+                    ++position.column;
+                }
+
+                previousCR = c == '\r';
+            }
+        }
+
+        void keepPrefix(std::size_t length) {
+            lexeme.resize(length);
+            position = tokenStart;
+            position.column += length;
+            position.offset += length;
+            previousCR = false;
+        }
+
+
+    private:
+        bool previousCR = false;
+    };
+
+    // потом в console h
+    #include <iomanip>
+    #include <iostream>
+    #include <limits>
+
+    inline const char* TokenName(TokenKind type) {
+        static const char* const names[] = {
+            "IDENTIFIER", "ERROR"
+        };
+        static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
+        return names[type - IDENTIFIER];
+    }
+
+    // Оформление вывода токенов и сообщений об ошибках.
+    class Console {
+    public:
+        static void Log(const Token& token) {
+            std::cout << std::setprecision(std::numeric_limits<double>::max_digits10)
+                      << token.start.line << ':' << token.start.column
+                      << "  " << TokenName(token.type) << "  value=";
+
+            switch (token.type) {
+            case IDENTIFIER:
+                PrintString(std::get<std::string>(token.value));
+                break;
+
+            case LEX_ERROR:
+                PrintString(std::get<std::string>(token.value));
+                std::cout << " lexeme=";
+                PrintString(token.lexeme);
+                break;
+
+            default:
+                std::cout << '-';
+            }
+
+            if (!token.details.empty()) std::cout << " (" << token.details << ')';
+            std::cout << '\n';
+        }
+
+        static void Error(const std::string& message) {
+            std::cerr << message << '\n';
+        }
+
+        static void Summary(std::size_t tokens, std::size_t errors) {
+            std::cout << tokens << " tokens, " << errors << " lexical errors\n";
+        }
+
+    private:
+        // Видимое оформление LF/TAB/backslash в логе. Значение токена не изменяется.
+        static void PrintString(const std::string& text) {
+            std::cout << '"';
+            for (unsigned char c : text) {
+                if (c == '\n')      std::cout << "\\n";
+                else if (c == '\r') std::cout << "\\r";
+                else if (c == '\t') std::cout << "\\t";
+                else if (c == '\\' || c == '"') std::cout << '\\' << char(c);
+                else if (c < 32 || c >= 127) {
+                    std::cout << "\\x" << std::hex << std::setw(2) << std::setfill('0')
+                              << unsigned(c) << std::dec << std::setfill(' ');
+                } else {
+                    std::cout << char(c);
+                }
+            }
+            std::cout << '"';
+        }
+    };
+
     #include <cstdio>
+
+    using namespace std;
+
+    Buffer buffer;
+    Token currentToken{};
+    size_t tokenCount = 0, errorCount = 0;
+
+    int emit(TokenKind type, TokenValue value = {}, const string& details = "") {
+        currentToken = {type, value, details, buffer.lexeme, buffer.tokenStart, buffer.position};
+        Console::Log(currentToken);
+
+        if (type == LEX_ERROR) ++errorCount;
+        else                  ++tokenCount;
+
+        return type;
+    }
+
+    int error(const string& message) {
+        return emit(LEX_ERROR, message);
+    }
+
+    #define YY_USER_ACTION buffer.trackPosition(yytext, size_t(yyleng));
 %}
 
 /* ============================================================
@@ -29,7 +196,8 @@ CHARACTER              (.|\n)
        Пробельные символы
        ============================================================ */
 
-    /* потом пробелы */
+
+{SPACES}                                    { } // Пример: пробел, табуляция или перевод строки -> пропуск между токенами.
 
     /* ============================================================
        Комментарии Smalltalk: двойные кавычки
@@ -65,7 +233,7 @@ CHARACTER              (.|\n)
        Литеральные селекторы: SELECTOR
        ============================================================ */
 
-    /* потом селекторы */
+    /* потом литеральные селекторы */
 
     /* ============================================================
        Присваивание, возврат и бинарные селекторы
@@ -77,24 +245,46 @@ CHARACTER              (.|\n)
        Скобки, начало массива, аргументы блока и разделители
        ============================================================ */
 
-    /* потом скобки */
+    /* потом скобки и разделители */
 
     /* ============================================================
        Нераспознанные знаки и конец входа
        ============================================================ */
 
-    /* потом ошибки и конец файла */
+.                                           { return error("Unexpected source character"); } // Пример: backtick вне литерала -> ERROR; в exclusive states действуют свои правила.
 
-(.|\n)                                     { }
-
+<INITIAL><<EOF>>                            { // Пример: пустой файл или EOF после готового токена -> 0.
+    buffer.tokenStart = buffer.position;
+    buffer.lexeme.clear();
+    return 0;
+}
 %%
 
 int main(int argc, char** argv) {
-    if (argc != 2) return 2;
+    if (argc != 2) {
+        Console::Error("Usage: lexer file.st");
+        return 2;
+    }
+
     yyin = fopen(argv[1], "rb");
-    if (!yyin) return 2;
+    if (!yyin) {
+        Console::Error(string("Cannot open ") + argv[1]);
+        return 2;
+    }
+
     while (yylex() != 0) {}
+
+    bool readError = ferror(yyin) != 0;
     fclose(yyin);
     yylex_destroy();
+    Console::Summary(tokenCount, errorCount);
+
+    if (readError) {
+        Console::Error("Cannot read input");
+        return 2;
+    }
+    if (errorCount > 0) {
+        return 1;
+    }
     return 0;
 }
