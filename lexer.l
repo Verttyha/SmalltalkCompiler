@@ -10,7 +10,8 @@
     #include <variant>
 
     enum TokenKind {
-        IDENTIFIER = 256, LEX_ERROR
+        IDENTIFIER = 256, SELF, SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE,
+        LEX_ERROR
     };
 
     struct Position {
@@ -86,7 +87,8 @@
 
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
-            "IDENTIFIER", "ERROR"
+            "IDENTIFIER", "SELF", "SUPER", "TRUE", "FALSE", "NIL",
+            "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -109,6 +111,10 @@
                 PrintString(std::get<std::string>(token.value));
                 std::cout << " lexeme=";
                 PrintString(token.lexeme);
+                break;
+
+            case TRUE_VALUE: case FALSE_VALUE:
+                std::cout << (std::get<bool>(token.value) ? "true" : "false");
                 break;
 
             default:
@@ -170,6 +176,11 @@
     }
 
     int identifier(const string& text) {
+        if (text == "self")  return emit(SELF);
+        if (text == "super") return emit(SUPER);
+        if (text == "nil")   return emit(NIL_VALUE);
+        if (text == "true")  return emit(TRUE_VALUE, true);
+        if (text == "false") return emit(FALSE_VALUE, false);
         return emit(IDENTIFIER, text);
     }
 
@@ -220,6 +231,11 @@ CHARACTER              (.|\n)
        ============================================================ */
 
 
+"self"                                      { return emit(SELF); } // Пример: self -> SELF; selfish -> IDENTIFIER.
+"super"                                     { return emit(SUPER); } // Пример: super -> SUPER; superClass -> IDENTIFIER.
+"nil"                                       { return emit(NIL_VALUE); } // Пример: nil -> NIL; nil2 -> IDENTIFIER.
+"true"                                      { return emit(TRUE_VALUE, true); } // Пример: true -> TRUE; True -> IDENTIFIER.
+"false"                                     { return emit(FALSE_VALUE, false); } // Пример: false -> FALSE; false2 -> IDENTIFIER.
 
 {IDENTIFIER_TEXT}                           { return identifier(buffer.lexeme); } // Пример: x, Person, size, a_b, a$b -> IDENTIFIER; роль определяет parser.
 
