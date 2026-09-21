@@ -169,6 +169,10 @@
         return emit(LEX_ERROR, message);
     }
 
+    int identifier(const string& text) {
+        return emit(IDENTIFIER, text);
+    }
+
     #define YY_USER_ACTION buffer.trackPosition(yytext, size_t(yyleng));
 %}
 
@@ -215,7 +219,9 @@ CHARACTER              (.|\n)
        Имена, псевдопеременные и части keyword-селекторов
        ============================================================ */
 
-    /* потом имена */
+
+
+{IDENTIFIER_TEXT}                           { return identifier(buffer.lexeme); } // Пример: x, Person, size, a_b, a$b -> IDENTIFIER; роль определяет parser.
 
     /* ============================================================
        Строки и символы в кавычках: STRING, SYMBOL
