@@ -10,8 +10,8 @@
     #include <variant>
 
     enum TokenKind {
-        IDENTIFIER = 256, SELF, SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE,
-        LEX_ERROR
+        IDENTIFIER = 256, KEYWORD, SELF, SUPER, TRUE_VALUE, FALSE_VALUE,
+        NIL_VALUE, LEX_ERROR
     };
 
     struct Position {
@@ -87,8 +87,8 @@
 
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
-            "IDENTIFIER", "SELF", "SUPER", "TRUE", "FALSE", "NIL",
-            "ERROR"
+            "IDENTIFIER", "KEYWORD", "SELF", "SUPER", "TRUE", "FALSE",
+            "NIL", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -103,7 +103,7 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER:
+            case IDENTIFIER: case KEYWORD:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -230,6 +230,8 @@ CHARACTER              (.|\n)
        Имена, псевдопеременные и части keyword-селекторов
        ============================================================ */
 
+{IDENTIFIER_TEXT}/(":="|"::")                      { return identifier(buffer.lexeme); } // Пример: x:=1 -> сначала IDENTIFIER(x), затем ASSIGN.
+{KEYWORD_PART}                              { return emit(KEYWORD, buffer.lexeme); } // Пример: at:, put:, whileTrue: -> KEYWORD; self: тоже KEYWORD.
 
 "self"                                      { return emit(SELF); } // Пример: self -> SELF; selfish -> IDENTIFIER.
 "super"                                     { return emit(SUPER); } // Пример: super -> SUPER; superClass -> IDENTIFIER.
