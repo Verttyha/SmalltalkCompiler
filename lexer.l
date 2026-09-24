@@ -11,7 +11,7 @@
 
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, SELF, SUPER, TRUE_VALUE, FALSE_VALUE,
-        NIL_VALUE, LEX_ERROR
+        NIL_VALUE, ASSIGN, RETURN, LEX_ERROR
     };
 
     struct Position {
@@ -88,7 +88,7 @@
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "SELF", "SUPER", "TRUE", "FALSE",
-            "NIL", "ERROR"
+            "NIL", "ASSIGN", "RETURN", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -263,7 +263,9 @@ CHARACTER              (.|\n)
        Присваивание, возврат и бинарные селекторы
        ============================================================ */
 
-    /* потом операции */
+":="|"_"                                    { return emit(ASSIGN); } // Пример: x:=1 -> ASSIGN после IDENTIFIER(x).
+"^"                                         { return emit(RETURN); } // Пример: ^self -> RETURN, SELF.
+
 
     /* ============================================================
        Скобки, начало массива, аргументы блока и разделители
