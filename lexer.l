@@ -10,8 +10,9 @@
     #include <variant>
 
     enum TokenKind {
-        IDENTIFIER = 256, KEYWORD, SELF, SUPER, TRUE_VALUE, FALSE_VALUE,
-        NIL_VALUE, ASSIGN, RETURN, LEX_ERROR
+        IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
+        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, ASSIGN, RETURN,
+        LEX_ERROR
     };
 
     struct Position {
@@ -87,8 +88,9 @@
 
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
-            "IDENTIFIER", "KEYWORD", "SELF", "SUPER", "TRUE", "FALSE",
-            "NIL", "ASSIGN", "RETURN", "ERROR"
+            "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
+            "SUPER", "TRUE", "FALSE", "NIL", "ASSIGN", "RETURN",
+            "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -103,7 +105,7 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER: case KEYWORD:
+            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -266,6 +268,9 @@ CHARACTER              (.|\n)
 ":="|"_"                                    { return emit(ASSIGN); } // Пример: x:=1 -> ASSIGN после IDENTIFIER(x).
 "^"                                         { return emit(RETURN); } // Пример: ^self -> RETURN, SELF.
 
+"-"                                         { return emit(MINUS, buffer.lexeme); } // Пример: -15 -> MINUS + INTEGER; одиночный - также бинарный селектор.
+"|"                                         { return emit(BAR, buffer.lexeme); } // Пример: | x y | -> BAR; одиночный | также бинарный селектор.
+{BINARY_SELECTOR_TEXT}                      { return emit(BINARY_SELECTOR, buffer.lexeme); } // Пример: <=, ==, --, ||, |+ -> один BINARY_SELECTOR; >>> -> >> и >.
 
     /* ============================================================
        Скобки, начало массива, аргументы блока и разделители
