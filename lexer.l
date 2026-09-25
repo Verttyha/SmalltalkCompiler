@@ -12,7 +12,8 @@
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, ASSIGN, RETURN,
-        LEX_ERROR
+        LPAREN, RPAREN, LBRACKET, RBRACKET, HASH, COLON,
+        PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -90,7 +91,8 @@
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
             "SUPER", "TRUE", "FALSE", "NIL", "ASSIGN", "RETURN",
-            "ERROR"
+            "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON",
+            "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -276,7 +278,14 @@ CHARACTER              (.|\n)
        Скобки, начало массива, аргументы блока и разделители
        ============================================================ */
 
-    /* потом скобки и разделители */
+"#"                                         { return emit(HASH); } // Пример: #(1) или # (1) -> HASH, LPAREN, INTEGER, RPAREN.
+"("                                         { return emit(LPAREN); } // Пример: (x) -> LPAREN.
+")"                                         { return emit(RPAREN); } // Пример: (x) или #(1) -> RPAREN.
+"["                                         { return emit(LBRACKET); } // Пример: [1] -> LBRACKET.
+"]"                                         { return emit(RBRACKET); } // Пример: [1] -> RBRACKET.
+":"                                         { return emit(COLON); } // Пример: [:x | x] -> COLON, IDENTIFIER(x).
+"."                                         { return emit(PERIOD); } // Пример: 1. -> INTEGER(1), PERIOD; 1.5 -> один FLOAT.
+";"                                         { return emit(SEMICOLON); } // Пример: Transcript show: 'a'; cr -> SEMICOLON.
 
     /* ============================================================
        Нераспознанные знаки и конец входа
