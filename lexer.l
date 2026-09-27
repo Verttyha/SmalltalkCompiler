@@ -49,7 +49,10 @@
         void trackPosition(const char* text, std::size_t length) {
             tokenStart = position;
 
-            lexeme.assign(text, length);
+            if (collecting)
+                lexeme.append(text, length);
+            else
+                lexeme.assign(text, length);
 
             for (std::size_t i = 0; i < length; ++i) {
                 unsigned char c = text[i];
@@ -77,9 +80,31 @@
             previousCR = false;
         }
 
+        void reset() {
+            content.clear();
+            literalStart = tokenStart;
+            collecting = true;
+        }
+
+        void append(const char* text, std::size_t length) {
+            content.append(text, length);
+        }
+
+        const std::string& current() const {
+            return content;
+        }
+
+        void restoreStart() {
+            tokenStart = literalStart;
+            collecting = false;
+        }
+
 
     private:
+        std::string content;
+        Position literalStart;
         bool previousCR = false;
+        bool collecting = false;
     };
 
     // потом в console h
@@ -188,8 +213,15 @@
         return emit(IDENTIFIER, text);
     }
 
+    int unfinished(const char* message) {
+        buffer.restoreStart();
+        return error(message);
+    }
+
     #define YY_USER_ACTION buffer.trackPosition(yytext, size_t(yyleng));
 %}
+
+%x COMMENT
 
 /* ============================================================
    Именованные регулярные выражения
@@ -222,7 +254,21 @@ CHARACTER              (.|\n)
        Комментарии Smalltalk: двойные кавычки
        ============================================================ */
 
-    /* потом комментарии */
+\"[^\"]*\"                                { } // Пример: "note" или "" -> пропустить комментарий.
+
+\"                                          { // Пример: "unfinished без закрывающей кавычки -> начать чтение комментария.
+    buffer.reset();
+    BEGIN(COMMENT);
+}
+<COMMENT>[^\"]+                            { } // Пример: unfinished -> пропустить текст, включая переводы строк.
+<COMMENT>\"                                 { // Пример: закрывающая " -> выход из комментария.
+    BEGIN(INITIAL);
+    buffer.restoreStart();
+}
+<COMMENT><<EOF>>                            { // Пример: файл закончился после "unfinished -> ошибка: комментарий не закрыт.
+    BEGIN(INITIAL);
+    return unfinished("Unterminated comment");
+}
 
     /* ============================================================
        Числовые значения: INTEGER, FLOAT, SCALED_DECIMAL
