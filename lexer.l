@@ -11,9 +11,9 @@
 
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
-        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, STRING_VALUE, ASSIGN,
-        RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
-        COLON, PERIOD, SEMICOLON, LEX_ERROR
+        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, CHAR_VALUE, STRING_VALUE,
+        ASSIGN, RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET,
+        HASH, COLON, PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -115,9 +115,9 @@
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
-            "SUPER", "TRUE", "FALSE", "NIL", "STRING", "ASSIGN",
-            "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
-            "COLON", "PERIOD", "SEMICOLON", "ERROR"
+            "SUPER", "TRUE", "FALSE", "NIL", "CHARACTER", "STRING",
+            "ASSIGN", "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET",
+            "HASH", "COLON", "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -141,6 +141,13 @@
                 std::cout << " lexeme=";
                 PrintString(token.lexeme);
                 break;
+
+            case CHAR_VALUE: {
+                unsigned code = static_cast<unsigned char>(std::get<char>(token.value));
+                std::cout << code << " (U+" << std::hex << std::uppercase << code
+                          << std::dec << std::nouppercase << ')';
+                break;
+            }
 
             case TRUE_VALUE: case FALSE_VALUE:
                 std::cout << (std::get<bool>(token.value) ? "true" : "false");
@@ -227,7 +234,7 @@
     #define YY_USER_ACTION buffer.trackPosition(yytext, size_t(yyleng));
 %}
 
-%x COMMENT STRING
+%x COMMENT STRING READ_CHARACTER
 
 /* ============================================================
    Именованные регулярные выражения
@@ -321,7 +328,19 @@ CHARACTER              (.|\n)
        Символьные значения: CHARACTER
        ============================================================ */
 
-    /* потом символ после $ */
+"$"                                         { // Пример: $A -> начать чтение одного символа после $.
+    buffer.reset();
+    BEGIN(READ_CHARACTER);
+}
+<READ_CHARACTER>{CHARACTER}                 { // Пример: $+, $$, $", $' или перевод строки после $ -> CHARACTER.
+    BEGIN(INITIAL);
+    buffer.restoreStart();
+    return emit(CHAR_VALUE, yytext[0]);
+}
+<READ_CHARACTER><<EOF>>                     { // Пример: одиночный $ + EOF -> ERROR, затем EOF.
+    BEGIN(INITIAL);
+    return unfinished("Expected character after $");
+}
 
     /* ============================================================
        Литеральные селекторы: SELECTOR
