@@ -11,9 +11,9 @@
 
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
-        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, ASSIGN, RETURN,
-        LPAREN, RPAREN, LBRACKET, RBRACKET, HASH, COLON,
-        PERIOD, SEMICOLON, LEX_ERROR
+        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, STRING_VALUE, ASSIGN,
+        RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
+        COLON, PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -115,9 +115,9 @@
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
-            "SUPER", "TRUE", "FALSE", "NIL", "ASSIGN", "RETURN",
-            "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON",
-            "PERIOD", "SEMICOLON", "ERROR"
+            "SUPER", "TRUE", "FALSE", "NIL", "STRING", "ASSIGN",
+            "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
+            "COLON", "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -132,7 +132,7 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR:
+            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -188,6 +188,7 @@
 
     Buffer buffer;
     Token currentToken{};
+    TokenKind stringKind = STRING_VALUE;
     size_t tokenCount = 0, errorCount = 0;
 
     int emit(TokenKind type, TokenValue value = {}, const string& details = "") {
@@ -213,6 +214,11 @@
         return emit(IDENTIFIER, text);
     }
 
+    int finishLiteral(TokenKind type) {
+        buffer.restoreStart();
+        return emit(type, buffer.current());
+    }
+
     int unfinished(const char* message) {
         buffer.restoreStart();
         return error(message);
@@ -221,7 +227,7 @@
     #define YY_USER_ACTION buffer.trackPosition(yytext, size_t(yyleng));
 %}
 
-%x COMMENT
+%x COMMENT STRING
 
 /* ============================================================
    Именованные регулярные выражения
@@ -295,7 +301,21 @@ CHARACTER              (.|\n)
        Строки и символы в кавычках: STRING, SYMBOL
        ============================================================ */
 
-    /* потом строки */
+"'"                                         { // Пример: 'Hello', '' -> STRING; открывающая кавычка не входит в value.
+    buffer.reset();
+    stringKind = STRING_VALUE;
+    BEGIN(STRING);
+}
+<STRING>"''"                                { buffer.append("'", 1); } // Пример: 'can''t' -> value="can't"; два апострофа дают один.
+<STRING>[^']+                               { buffer.append(yytext, size_t(yyleng)); } // Пример: '\n' сохраняет два символа: backslash и n.
+<STRING>"'"                                 { // Пример: закрывающая ' -> STRING или SYMBOL.
+    BEGIN(INITIAL);
+    return finishLiteral(stringKind);
+}
+<STRING><<EOF>>                             { // Пример: 'abc + EOF -> ERROR, затем EOF.
+    BEGIN(INITIAL);
+    return unfinished("Unterminated string");
+}
 
     /* ============================================================
        Символьные значения: CHARACTER
