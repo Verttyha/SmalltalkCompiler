@@ -11,9 +11,9 @@
 
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
-        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, CHAR_VALUE, STRING_VALUE,
-        ASSIGN, RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET,
-        HASH, COLON, PERIOD, SEMICOLON, LEX_ERROR
+        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, CHAR_VALUE,
+        STRING_VALUE, ASSIGN, RETURN, LPAREN, RPAREN, LBRACKET,
+        RBRACKET, HASH, COLON, PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -38,6 +38,13 @@
         std::string details;
         std::string lexeme;
         Position start, end;
+    };
+
+    struct NumberValue {
+        std::size_t length = 0;
+        TokenKind type = INTEGER;
+        TokenValue value;
+        std::string details;
     };
 
     class Buffer {
@@ -99,8 +106,79 @@
             collecting = false;
         }
 
+        // 16rFF -> 255
+        static NumberValue parseNumber(const std::string& text) {
+            std::size_t i = 0;
+            auto digits = [&](unsigned base) {
+                std::string part;
+                while (i < text.size()) {
+                    char c = text[i];
+                    if (c == '_') {
+                        ++i;
+                        continue;
+                    }
+                    if (digit(c) >= base) break;
+                    part += c;
+                    ++i;
+                }
+                return part;
+            };
+
+            NumberValue result;
+            std::string integer = digits(10), message;
+            unsigned base = 10;
+            bool radix = i < text.size() && text[i] == 'r';
+            bool negative = false;
+            if (integer.empty()) message = "Missing integer digits";
+            if (radix) {
+                base = 0;
+                for (char c : integer) {
+                    base = base * 10 + unsigned(c - '0');
+                    if (base > 36) break;
+                }
+                if (base < 1 || base > 36) {
+                    message = "Radix must be 1..36";
+                    base = 10;
+                }
+                ++i;
+                if (i < text.size() && text[i] == '-') {
+                    negative = true;
+                    ++i;
+                }
+                integer = digits(base);
+                if (integer.empty() && message.empty()) message = "Missing integer digits";
+            }
+
+            // потом дробную часть и степень
+
+            result.length = i;
+            if (!message.empty()) return {i, LEX_ERROR, message, ""};
+
+            try {
+                std::string mantissa = integer;
+                if (negative) mantissa = "-" + mantissa;
+                if (base == 1) base = 2;
+                result.value = std::stoll(mantissa, nullptr, base);
+            } catch (const std::out_of_range&) {
+                message = "Number is outside the supported range";
+            } catch (const std::invalid_argument& exception) {
+                message = exception.what();
+            }
+            if (!message.empty()) {
+                result.type = LEX_ERROR;
+                result.value = message;
+                result.details.clear();
+            }
+            return result;
+        }
 
     private:
+        static unsigned digit(char c) {
+            if (c >= '0' && c <= '9') return c - '0';
+            if (c >= 'A' && c <= 'Z') return c - 'A' + 10;
+            return 36;
+        }
+
         std::string content;
         Position literalStart;
         bool previousCR = false;
@@ -115,9 +193,9 @@
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
-            "SUPER", "TRUE", "FALSE", "NIL", "CHARACTER", "STRING",
-            "ASSIGN", "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET",
-            "HASH", "COLON", "PERIOD", "SEMICOLON", "ERROR"
+            "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "CHARACTER",
+            "STRING", "ASSIGN", "RETURN", "LPAREN", "RPAREN", "LBRACKET",
+            "RBRACKET", "HASH", "COLON", "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -148,6 +226,10 @@
                           << std::dec << std::nouppercase << ')';
                 break;
             }
+
+            case INTEGER:
+                std::cout << std::get<IntegerValue>(token.value);
+                break;
 
             case TRUE_VALUE: case FALSE_VALUE:
                 std::cout << (std::get<bool>(token.value) ? "true" : "false");
@@ -287,7 +369,14 @@ CHARACTER              (.|\n)
        Числовые значения: INTEGER, FLOAT, SCALED_DECIMAL
        ============================================================ */
 
-    /* потом числа */
+{NUMBER_TEXT}                               {
+    NumberValue parsed = Buffer::parseNumber(buffer.lexeme);
+    if (parsed.length < size_t(yyleng)) {
+        yyless(int(parsed.length));
+        buffer.keepPrefix(parsed.length);
+    }
+    return emit(parsed.type, parsed.value, parsed.details);
+}
 
     /* ============================================================
        Имена, псевдопеременные и части keyword-селекторов
