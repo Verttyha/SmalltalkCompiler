@@ -11,9 +11,10 @@
 
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
-        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, CHAR_VALUE,
-        STRING_VALUE, ASSIGN, RETURN, LPAREN, RPAREN, LBRACKET,
-        RBRACKET, HASH, COLON, PERIOD, SEMICOLON, LEX_ERROR
+        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
+        CHAR_VALUE, STRING_VALUE, ASSIGN, RETURN, LPAREN, RPAREN,
+        LBRACKET, RBRACKET, HASH, COLON, PERIOD, SEMICOLON,
+        LEX_ERROR
     };
 
     struct Position {
@@ -125,7 +126,7 @@
             };
 
             NumberValue result;
-            std::string integer = digits(10), message;
+            std::string integer = digits(10), fraction, exponent, message;
             unsigned base = 10;
             bool radix = i < text.size() && text[i] == 'r';
             bool negative = false;
@@ -149,16 +150,55 @@
                 if (integer.empty() && message.empty()) message = "Missing integer digits";
             }
 
-            // потом дробную часть и степень
+            if (i + 1 < text.size() && text[i] == '.' && digit(text[i + 1]) < base) {
+                ++i;
+                fraction = digits(base);
+                result.type = FLOAT_VALUE;
+            }
+            if (i < text.size() && (text[i] == 'e' || text[i] == 'd' || text[i] == 'q')) {
+                result.type = FLOAT_VALUE;
+                result.details = std::string("format=") + text[i++];
+                if (i < text.size() && text[i] == '-') {
+                    ++i;
+                    exponent = "-" + digits(10);
+                    if (exponent == "-" && message.empty()) message = "Missing exponent digits";
+                } else if (i < text.size() && digit(text[i]) < 10) {
+                    exponent = digits(10);
+                }
+            }
 
             result.length = i;
             if (!message.empty()) return {i, LEX_ERROR, message, ""};
 
             try {
                 std::string mantissa = integer;
+                if (!fraction.empty()) mantissa += "." + fraction;
                 if (negative) mantissa = "-" + mantissa;
-                if (base == 1) base = 2;
-                result.value = std::stoll(mantissa, nullptr, base);
+                if (result.type == INTEGER) {
+                    if (base == 1) base = 2;
+                    result.value = std::stoll(mantissa, nullptr, base);
+                } else {
+                    // добавить отдельную точность для e d q?
+                    double value = 0;
+                    if (!radix) {
+                        if (!exponent.empty()) mantissa += "e" + exponent;
+                        value = std::stod(mantissa);
+                    } else {
+                        // добавить точное округление дробей с основанием?
+                        int power = 0;
+                        if (!exponent.empty()) power = std::stoi(exponent);
+                        for (char c : integer) value = value * base + digit(c);
+                        double place = 1;
+                        for (char c : fraction) {
+                            place /= base;
+                            value += digit(c) * place;
+                        }
+                        if (value != 0) value *= std::pow(double(base), power);
+                        if (!std::isfinite(value)) throw std::out_of_range("Float is outside double range");
+                        if (negative) value = -value;
+                    }
+                    result.value = value;
+                }
             } catch (const std::out_of_range&) {
                 message = "Number is outside the supported range";
             } catch (const std::invalid_argument& exception) {
@@ -193,9 +233,10 @@
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
-            "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "CHARACTER",
-            "STRING", "ASSIGN", "RETURN", "LPAREN", "RPAREN", "LBRACKET",
-            "RBRACKET", "HASH", "COLON", "PERIOD", "SEMICOLON", "ERROR"
+            "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
+            "CHARACTER", "STRING", "ASSIGN", "RETURN", "LPAREN", "RPAREN",
+            "LBRACKET", "RBRACKET", "HASH", "COLON", "PERIOD", "SEMICOLON",
+            "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -229,6 +270,10 @@
 
             case INTEGER:
                 std::cout << std::get<IntegerValue>(token.value);
+                break;
+
+            case FLOAT_VALUE:
+                std::cout << std::get<double>(token.value);
                 break;
 
             case TRUE_VALUE: case FALSE_VALUE:
