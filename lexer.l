@@ -12,9 +12,9 @@
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
-        CHAR_VALUE, STRING_VALUE, ASSIGN, RETURN, LPAREN, RPAREN,
-        LBRACKET, RBRACKET, HASH, COLON, PERIOD, SEMICOLON,
-        LEX_ERROR
+        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, ASSIGN, RETURN, LPAREN,
+        RPAREN, LBRACKET, RBRACKET, HASH, COLON, PERIOD,
+        SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -107,7 +107,7 @@
             collecting = false;
         }
 
-        // 16rFF -> 255
+        // 16rFF -> 255, 1.25s3 -> 1.25 scale=3
         static NumberValue parseNumber(const std::string& text) {
             std::size_t i = 0;
             auto digits = [&](unsigned base) {
@@ -126,7 +126,7 @@
             };
 
             NumberValue result;
-            std::string integer = digits(10), fraction, exponent, message;
+            std::string integer = digits(10), fraction, exponent, scale, message;
             unsigned base = 10;
             bool radix = i < text.size() && text[i] == 'r';
             bool negative = false;
@@ -155,7 +155,16 @@
                 fraction = digits(base);
                 result.type = FLOAT_VALUE;
             }
-            if (i < text.size() && (text[i] == 'e' || text[i] == 'd' || text[i] == 'q')) {
+            if (i < text.size() && text[i] == 's') {
+                std::size_t next = i + 1;
+                bool name = next < text.size() && ((text[next] >= 'A' && text[next] <= 'Z')
+                         || (text[next] >= 'a' && text[next] <= 'z') || text[next] == '_' || text[next] == '$');
+                if (!name) {
+                    ++i;
+                    if (i < text.size() && digit(text[i]) < 10) scale = digits(10);
+                    result.type = SCALED_DECIMAL;
+                }
+            } else if (i < text.size() && (text[i] == 'e' || text[i] == 'd' || text[i] == 'q')) {
                 result.type = FLOAT_VALUE;
                 result.details = std::string("format=") + text[i++];
                 if (i < text.size() && text[i] == '-') {
@@ -197,7 +206,15 @@
                         if (!std::isfinite(value)) throw std::out_of_range("Float is outside double range");
                         if (negative) value = -value;
                     }
-                    result.value = value;
+                    if (result.type == SCALED_DECIMAL) {
+                        // добавить scale больше size_t?
+                        std::size_t places = fraction.size();
+                        if (!scale.empty()) places = std::stoull(scale);
+                        result.value = DecimalValue{value, places};
+                        result.details = "scale=" + std::to_string(places);
+                    } else {
+                        result.value = value;
+                    }
                 }
             } catch (const std::out_of_range&) {
                 message = "Number is outside the supported range";
@@ -234,9 +251,9 @@
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
             "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
-            "CHARACTER", "STRING", "ASSIGN", "RETURN", "LPAREN", "RPAREN",
-            "LBRACKET", "RBRACKET", "HASH", "COLON", "PERIOD", "SEMICOLON",
-            "ERROR"
+            "SCALED_DECIMAL", "CHARACTER", "STRING", "ASSIGN", "RETURN", "LPAREN",
+            "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON", "PERIOD",
+            "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -274,6 +291,10 @@
 
             case FLOAT_VALUE:
                 std::cout << std::get<double>(token.value);
+                break;
+
+            case SCALED_DECIMAL:
+                std::cout << std::get<DecimalValue>(token.value).value;
                 break;
 
             case TRUE_VALUE: case FALSE_VALUE:
