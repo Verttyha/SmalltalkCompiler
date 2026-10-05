@@ -12,9 +12,9 @@
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
-        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, ASSIGN, RETURN,
-        LPAREN, RPAREN, LBRACKET, RBRACKET, HASH, COLON,
-        PERIOD, SEMICOLON, LEX_ERROR
+        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, SELECTOR, ASSIGN,
+        RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
+        COLON, PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -251,9 +251,9 @@
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
             "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
-            "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "ASSIGN", "RETURN",
-            "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON",
-            "PERIOD", "SEMICOLON", "ERROR"
+            "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "SELECTOR_LITERAL", "ASSIGN",
+            "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
+            "COLON", "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -268,7 +268,7 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE: case SYMBOL:
+            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE: case SYMBOL: case SELECTOR:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -506,7 +506,8 @@ CHARACTER              (.|\n)
        Литеральные селекторы: SELECTOR
        ============================================================ */
 
-    /* потом литеральные селекторы */
+"#"{SYMBOL_TEXT}                            { return emit(SELECTOR, buffer.lexeme.substr(1)); } // Пример: #at:put:next, #:, #_x -> один Symbol.
+"#"{BINARY_SELECTOR_TEXT}                   { return emit(SELECTOR, buffer.lexeme.substr(1)); } // Пример: #+, #<=, #>> -> SELECTOR; #>>> -> SELECTOR(>>) и BINARY_SELECTOR(>).
 
     /* ============================================================
        Присваивание, возврат и бинарные селекторы
