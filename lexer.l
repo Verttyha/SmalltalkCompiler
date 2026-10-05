@@ -12,9 +12,9 @@
     enum TokenKind {
         IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
-        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, ASSIGN, RETURN, LPAREN,
-        RPAREN, LBRACKET, RBRACKET, HASH, COLON, PERIOD,
-        SEMICOLON, LEX_ERROR
+        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, ASSIGN, RETURN,
+        LPAREN, RPAREN, LBRACKET, RBRACKET, HASH, COLON,
+        PERIOD, SEMICOLON, LEX_ERROR
     };
 
     struct Position {
@@ -251,9 +251,9 @@
         static const char* const names[] = {
             "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
             "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
-            "SCALED_DECIMAL", "CHARACTER", "STRING", "ASSIGN", "RETURN", "LPAREN",
-            "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON", "PERIOD",
-            "SEMICOLON", "ERROR"
+            "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "ASSIGN", "RETURN",
+            "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH", "COLON",
+            "PERIOD", "SEMICOLON", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -268,7 +268,7 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE:
+            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE: case SYMBOL:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -463,6 +463,11 @@ CHARACTER              (.|\n)
        Строки и символы в кавычках: STRING, SYMBOL
        ============================================================ */
 
+"#'"                                        { // Пример: #'Hello world' -> SYMBOL; используется состояние строки.
+    buffer.reset();
+    stringKind = SYMBOL;
+    BEGIN(STRING);
+}
 "'"                                         { // Пример: 'Hello', '' -> STRING; открывающая кавычка не входит в value.
     buffer.reset();
     stringKind = STRING_VALUE;
@@ -474,9 +479,9 @@ CHARACTER              (.|\n)
     BEGIN(INITIAL);
     return finishLiteral(stringKind);
 }
-<STRING><<EOF>>                             { // Пример: 'abc + EOF -> ERROR, затем EOF.
+<STRING><<EOF>>                             { // Пример: 'abc или #'abc + EOF -> ERROR, затем EOF.
     BEGIN(INITIAL);
-    return unfinished("Unterminated string");
+    return unfinished(stringKind == SYMBOL ? "Unterminated quoted symbol" : "Unterminated string");
 }
 
     /* ============================================================
