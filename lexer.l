@@ -507,6 +507,11 @@ CHARACTER              (.|\n)
        ============================================================ */
 
 "#"{SYMBOL_TEXT}                            { return emit(SELECTOR, buffer.lexeme.substr(1)); } // Пример: #at:put:next, #:, #_x -> один Symbol.
+"#"{BINARY_CHARACTER}"-"/{DIGIT}            {
+    yyless(2);
+    buffer.keepPrefix(2);
+    return emit(SELECTOR, buffer.lexeme.substr(1));
+}
 "#"{BINARY_SELECTOR_TEXT}                   { return emit(SELECTOR, buffer.lexeme.substr(1)); } // Пример: #+, #<=, #>> -> SELECTOR; #>>> -> SELECTOR(>>) и BINARY_SELECTOR(>).
 
     /* ============================================================
@@ -516,6 +521,19 @@ CHARACTER              (.|\n)
 ":="|"_"                                    { return emit(ASSIGN); } // Пример: x:=1 -> ASSIGN после IDENTIFIER(x).
 "^"                                         { return emit(RETURN); } // Пример: ^self -> RETURN, SELF.
 
+{BINARY_CHARACTER}"-"/{DIGIT}               {
+    yyless(1);
+    buffer.keepPrefix(1);
+    if (buffer.lexeme == "-") {
+        return emit(MINUS, buffer.lexeme);
+    }
+
+    if (buffer.lexeme == "|") {
+        return emit(BAR, buffer.lexeme);
+    }
+
+    return emit(BINARY_SELECTOR, buffer.lexeme);
+}
 "-"                                         { return emit(MINUS, buffer.lexeme); } // Пример: -15 -> MINUS + INTEGER; одиночный - также бинарный селектор.
 "|"                                         { return emit(BAR, buffer.lexeme); } // Пример: | x y | -> BAR; одиночный | также бинарный селектор.
 {BINARY_SELECTOR_TEXT}                      { return emit(BINARY_SELECTOR, buffer.lexeme); } // Пример: <=, ==, --, ||, |+ -> один BINARY_SELECTOR; >>> -> >> и >.
