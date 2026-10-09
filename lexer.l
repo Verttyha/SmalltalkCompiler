@@ -14,7 +14,7 @@
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
         SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, SELECTOR, ASSIGN,
         RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
-        COLON, PERIOD, SEMICOLON, LEX_ERROR
+        COLON, PERIOD, SEMICOLON, SCOPE_SEPARATOR, LEX_ERROR
     };
 
     struct Position {
@@ -253,7 +253,7 @@
             "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
             "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "SELECTOR_LITERAL", "ASSIGN",
             "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
-            "COLON", "PERIOD", "SEMICOLON", "ERROR"
+            "COLON", "PERIOD", "SEMICOLON", "SCOPE_SEPARATOR", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -547,7 +547,22 @@ CHARACTER              (.|\n)
 ")"                                         { return emit(RPAREN); } // Пример: (x) или #(1) -> RPAREN.
 "["                                         { return emit(LBRACKET); } // Пример: [1] -> LBRACKET.
 "]"                                         { return emit(RBRACKET); } // Пример: [1] -> RBRACKET.
+"::"                                        { return emit(SCOPE_SEPARATOR); }
 ":"                                         { return emit(COLON); } // Пример: [:x | x] -> COLON, IDENTIFIER(x).
+"."/[A-Za-z0-9_$]                           {
+    bool name = currentToken.type == IDENTIFIER || currentToken.type == SELF
+             || currentToken.type == SUPER || currentToken.type == TRUE_VALUE
+             || currentToken.type == FALSE_VALUE || currentToken.type == NIL_VALUE;
+    if (!name) {
+        return emit(PERIOD);
+    }
+
+    if (currentToken.end.offset != buffer.tokenStart.offset) {
+        return emit(PERIOD);
+    }
+
+    return emit(SCOPE_SEPARATOR);
+}
 "."                                         { return emit(PERIOD); } // Пример: 1. -> INTEGER(1), PERIOD; 1.5 -> один FLOAT.
 ";"                                         { return emit(SEMICOLON); } // Пример: Transcript show: 'a'; cr -> SEMICOLON.
 
