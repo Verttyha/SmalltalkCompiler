@@ -14,7 +14,8 @@
         SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
         SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, SELECTOR, ASSIGN,
         RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
-        COLON, PERIOD, SEMICOLON, SCOPE_SEPARATOR, LEX_ERROR
+        COLON, PERIOD, SEMICOLON, LBRACE, RBRACE, SCOPE_SEPARATOR,
+        LEX_ERROR
     };
 
     struct Position {
@@ -253,7 +254,8 @@
             "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
             "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "SELECTOR_LITERAL", "ASSIGN",
             "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
-            "COLON", "PERIOD", "SEMICOLON", "SCOPE_SEPARATOR", "ERROR"
+            "COLON", "PERIOD", "SEMICOLON", "LBRACE", "RBRACE", "SCOPE_SEPARATOR",
+            "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -570,6 +572,8 @@ CHARACTER              (.|\n)
        Нераспознанные знаки и конец входа
        ============================================================ */
 
+"{"                                         { return emit(LBRACE); }
+"}"                                         { return emit(RBRACE); }
 .                                           { return error("Unexpected source character"); } // Пример: backtick вне литерала -> ERROR; в exclusive states действуют свои правила.
 
 <INITIAL><<EOF>>                            { // Пример: пустой файл или EOF после готового токена -> 0.
