@@ -10,12 +10,11 @@
     #include <variant>
 
     enum TokenKind {
-        IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR, SELF,
-        SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE, INTEGER, FLOAT_VALUE,
-        SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE, SYMBOL, SELECTOR, ASSIGN,
-        RETURN, LPAREN, RPAREN, LBRACKET, RBRACKET, HASH,
-        COLON, PERIOD, SEMICOLON, LBRACE, RBRACE, SCOPE_SEPARATOR,
-        LEX_ERROR
+        IDENTIFIER = 256, KEYWORD, BINARY_SELECTOR, MINUS, BAR,
+        SELF, SUPER, TRUE_VALUE, FALSE_VALUE, NIL_VALUE,
+        INTEGER, FLOAT_VALUE, SCALED_DECIMAL, CHAR_VALUE, STRING_VALUE,
+        SYMBOL, SELECTOR, ASSIGN, RETURN, LPAREN, RPAREN,
+        LBRACKET, RBRACKET, HASH, COLON, PERIOD, SEMICOLON, CHUNK_END, LBRACE, RBRACE, SCOPE_SEPARATOR, LEX_ERROR
     };
 
     struct Position {
@@ -250,12 +249,11 @@
 
     inline const char* TokenName(TokenKind type) {
         static const char* const names[] = {
-            "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR", "SELF",
-            "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
-            "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "SELECTOR_LITERAL", "ASSIGN",
-            "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET", "HASH",
-            "COLON", "PERIOD", "SEMICOLON", "LBRACE", "RBRACE", "SCOPE_SEPARATOR",
-            "ERROR"
+            "IDENTIFIER", "KEYWORD", "BINARY_SELECTOR", "MINUS", "BAR",
+            "SELF", "SUPER", "TRUE", "FALSE", "NIL", "INTEGER", "FLOAT",
+            "SCALED_DECIMAL", "CHARACTER", "STRING", "SYMBOL_LITERAL", "SELECTOR_LITERAL",
+            "ASSIGN", "RETURN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET",
+            "HASH", "COLON", "PERIOD", "SEMICOLON", "CHUNK_END", "LBRACE", "RBRACE", "SCOPE_SEPARATOR", "ERROR"
         };
         static_assert(sizeof(names) / sizeof(names[0]) == LEX_ERROR - IDENTIFIER + 1);
         return names[type - IDENTIFIER];
@@ -270,7 +268,8 @@
                       << "  " << TokenName(token.type) << "  value=";
 
             switch (token.type) {
-            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR: case STRING_VALUE: case SYMBOL: case SELECTOR:
+            case IDENTIFIER: case KEYWORD: case BINARY_SELECTOR: case MINUS: case BAR:
+            case STRING_VALUE: case SYMBOL: case SELECTOR:
                 PrintString(std::get<std::string>(token.value));
                 break;
 
@@ -410,6 +409,13 @@ CHARACTER              (.|\n)
        Пробельные символы
        ============================================================ */
 
+^"#!"[^\r\n]*                             {
+    if (buffer.tokenStart.offset != 0) {
+        yyless(1);
+        buffer.keepPrefix(1);
+        return emit(HASH);
+    }
+}
 
 {SPACES}                                    { } // Пример: пробел, табуляция или перевод строки -> пропуск между токенами.
 
@@ -536,6 +542,7 @@ CHARACTER              (.|\n)
 
     return emit(BINARY_SELECTOR, buffer.lexeme);
 }
+"!"                                         { return emit(CHUNK_END); }
 "-"                                         { return emit(MINUS, buffer.lexeme); } // Пример: -15 -> MINUS + INTEGER; одиночный - также бинарный селектор.
 "|"                                         { return emit(BAR, buffer.lexeme); } // Пример: | x y | -> BAR; одиночный | также бинарный селектор.
 {BINARY_SELECTOR_TEXT}                      { return emit(BINARY_SELECTOR, buffer.lexeme); } // Пример: <=, ==, --, ||, |+ -> один BINARY_SELECTOR; >>> -> >> и >.
