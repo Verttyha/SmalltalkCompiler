@@ -1,0 +1,7 @@
+1:1  SCALED_DECIMAL  value=123 (scale=0)
+2:1  SCALED_DECIMAL  value=123 (scale=2)
+3:1  SCALED_DECIMAL  value=1.25 (scale=2)
+4:1  SCALED_DECIMAL  value=1.25 (scale=3)
+5:1  SCALED_DECIMAL  value=0.001 (scale=4)
+6:1  SCALED_DECIMAL  value=9.9999999999999998e+23 (scale=6)
+6 tokens, 0 lexical errors

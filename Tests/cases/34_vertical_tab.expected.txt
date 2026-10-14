@@ -1,0 +1,4 @@
+1:1  ERROR  value="Unexpected source character" lexeme="\x0b"
+1:3  IDENTIFIER  value="x"
+1:6  IDENTIFIER  value="y"
+2 tokens, 1 lexical errors

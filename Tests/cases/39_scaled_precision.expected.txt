@@ -1,0 +1,5 @@
+1:1  SCALED_DECIMAL  value=1.25 (scale=1)
+1:8  SCALED_DECIMAL  value=1 (scale=1000001)
+1:18  ERROR  value="Number is outside the supported range" lexeme="1s999999999999999999999999"
+1:45  SCALED_DECIMAL  value=1.25 (scale=0)
+3 tokens, 1 lexical errors

@@ -1,0 +1,15 @@
+1:1  IDENTIFIER  value="x"
+1:2  ASSIGN  value=-
+1:4  INTEGER  value=1
+1:5  PERIOD  value=-
+2:1  SELF  value=-
+2:5  ASSIGN  value=-
+2:7  FALSE  value=false
+2:12  PERIOD  value=-
+3:1  FLOAT  value=1.5
+3:4  PERIOD  value=-
+3:6  MINUS  value="-"
+3:7  INTEGER  value=15
+4:1  KEYWORD  value="at:"
+4:4  KEYWORD  value="put:"
+14 tokens, 0 lexical errors

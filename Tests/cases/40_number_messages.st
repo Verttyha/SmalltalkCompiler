@@ -1,0 +1,13 @@
+1e3
+1.0e+3
+1.0e3negated
+12s2sqrt
+16rFFsqrt
+1.0sin
+12sfoo
+12s_2
+0b1z
+1.0e-
+1.0e-foo
+1efoo
+1.0e

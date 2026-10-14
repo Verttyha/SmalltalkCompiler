@@ -1,0 +1,7 @@
+1:1  STRING  value=""
+2:1  STRING  value="hello"
+3:1  STRING  value="can't"
+4:1  STRING  value="\\n"
+5:1  STRING  value="first\nsecond"
+7:1  STRING  value="last"
+6 tokens, 0 lexical errors

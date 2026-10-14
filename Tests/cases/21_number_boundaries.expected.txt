@@ -1,0 +1,10 @@
+1:1  FLOAT  value=1000 (format=e)
+1:5  FLOAT  value=1
+1:8  IDENTIFIER  value="E3"
+1:11  PERIOD  value=-
+1:12  INTEGER  value=5
+1:14  INTEGER  value=1
+1:15  PERIOD  value=-
+1:17  FLOAT  value=0.01 (format=e)
+1:23  RPAREN  value=-
+9 tokens, 0 lexical errors

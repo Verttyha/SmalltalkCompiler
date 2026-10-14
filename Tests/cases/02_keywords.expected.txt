@@ -1,0 +1,5 @@
+1:1  KEYWORD  value="at:"
+2:1  KEYWORD  value="put:"
+3:1  KEYWORD  value="whileTrue:"
+4:1  KEYWORD  value="self:"
+4 tokens, 0 lexical errors

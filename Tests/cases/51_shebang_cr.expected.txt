@@ -1,0 +1,4 @@
+2:1  IDENTIFIER  value="x"
+2:2  ASSIGN  value=-
+2:4  INTEGER  value=2
+3 tokens, 0 lexical errors

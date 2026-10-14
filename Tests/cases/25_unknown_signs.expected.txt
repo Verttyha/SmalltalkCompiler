@@ -1,0 +1,5 @@
+1:1  LBRACE  value=-
+1:3  RBRACE  value=-
+1:5  ERROR  value="Unexpected source character" lexeme="`"
+1:7  INTEGER  value=7
+3 tokens, 1 lexical errors

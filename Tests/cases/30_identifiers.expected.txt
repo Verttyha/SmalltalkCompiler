@@ -1,0 +1,11 @@
+1:1  IDENTIFIER  value="a$b"
+1:5  IDENTIFIER  value="a_b"
+1:9  ASSIGN  value=-
+1:10  IDENTIFIER  value="x"
+1:12  IDENTIFIER  value="x"
+1:14  ASSIGN  value=-
+1:16  INTEGER  value=7
+1:18  IDENTIFIER  value="x"
+1:19  ASSIGN  value=-
+1:21  INTEGER  value=1
+10 tokens, 0 lexical errors

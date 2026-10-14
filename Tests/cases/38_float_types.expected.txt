@@ -1,0 +1,5 @@
+1:1  FLOAT  value=1.2345678899999999 (format=e)
+1:14  ERROR  value="Number is outside the supported range" lexeme="1.0q400"
+1:22  ERROR  value="Number is outside the supported range" lexeme="1.0e9999"
+1:31  ERROR  value="Number is outside the supported range" lexeme="1.0e-9999"
+1 tokens, 3 lexical errors

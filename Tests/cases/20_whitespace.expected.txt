@@ -1,0 +1,2 @@
+3:2  ERROR  value="Unexpected source character" lexeme="\x0b"
+0 tokens, 1 lexical errors

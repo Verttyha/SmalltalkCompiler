@@ -1,0 +1,5 @@
+1:1  INTEGER  value=0
+2:1  INTEGER  value=12
+3:1  INTEGER  value=123
+4:1  ERROR  value="Number is outside the supported range" lexeme="999999999999999999999999999999"
+3 tokens, 1 lexical errors

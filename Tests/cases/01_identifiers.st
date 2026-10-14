@@ -1,0 +1,10 @@
+x
+Person
+size
+a_b
+_x
+selfish
+superClass
+nil2
+True
+false2

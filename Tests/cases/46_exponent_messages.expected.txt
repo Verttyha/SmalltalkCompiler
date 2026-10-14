@@ -1,0 +1,16 @@
+1:1  FLOAT  value=1 (format=e)
+1:3  IDENTIFIER  value="abs"
+1:7  FLOAT  value=1 (format=d)
+1:9  IDENTIFIER  value="negated"
+1:17  FLOAT  value=1 (format=q)
+1:19  IDENTIFIER  value="negated"
+1:27  FLOAT  value=1 (format=e)
+1:31  IDENTIFIER  value="abs"
+1:35  INTEGER  value=12
+1:37  IDENTIFIER  value="sfoo"
+1:42  FLOAT  value=1 (format=e)
+1:44  ASSIGN  value=-
+1:45  IDENTIFIER  value="foo"
+1:49  FLOAT  value=1 (format=e)
+1:51  CHARACTER  value=65 (U+41)
+15 tokens, 0 lexical errors

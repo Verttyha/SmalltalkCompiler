@@ -1,0 +1,12 @@
+1:1  IDENTIFIER  value="Smalltalk"
+1:10  SCOPE_SEPARATOR  value=-
+1:12  IDENTIFIER  value="Integer"
+1:20  IDENTIFIER  value="x"
+1:21  ASSIGN  value=-
+1:23  INTEGER  value=1
+1:25  KEYWORD  value="at:"
+1:28  KEYWORD  value="put:"
+1:33  SELF  value=-
+1:37  SCOPE_SEPARATOR  value=-
+1:39  IDENTIFIER  value="Object"
+11 tokens, 0 lexical errors

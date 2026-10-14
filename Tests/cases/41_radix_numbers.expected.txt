@@ -1,0 +1,11 @@
+1:1  INTEGER  value=1000
+1:7  INTEGER  value=255
+1:14  FLOAT  value=10.9375
+1:21  INTEGER  value=-255
+1:28  SCALED_DECIMAL  value=10.9375 (scale=2)
+1:37  FLOAT  value=2800 (format=e)
+1:46  INTEGER  value=2
+1:50  INTEGER  value=2
+1:52  SCALED_DECIMAL  value=0.33333333333333331 (scale=4)
+1:60  FLOAT  value=-255.5
+10 tokens, 0 lexical errors

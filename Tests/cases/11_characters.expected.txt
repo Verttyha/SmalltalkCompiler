@@ -1,0 +1,10 @@
+1:1  CHARACTER  value=65 (U+41)
+2:1  CHARACTER  value=43 (U+2B)
+3:1  CHARACTER  value=36 (U+24)
+4:1  CHARACTER  value=34 (U+22)
+5:1  CHARACTER  value=39 (U+27)
+6:1  CHARACTER  value=48 (U+30)
+7:1  CHARACTER  value=32 (U+20)
+8:1  CHARACTER  value=9 (U+9)
+9:1  CHARACTER  value=10 (U+A)
+9 tokens, 0 lexical errors

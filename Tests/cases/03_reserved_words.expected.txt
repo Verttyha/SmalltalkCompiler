@@ -1,0 +1,6 @@
+1:1  SELF  value=-
+2:1  SUPER  value=-
+3:1  NIL  value=-
+4:1  TRUE  value=true
+5:1  FALSE  value=false
+5 tokens, 0 lexical errors

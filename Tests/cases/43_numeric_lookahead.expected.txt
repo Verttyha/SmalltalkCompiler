@@ -1,0 +1,13 @@
+1:1  INTEGER  value=2
+1:5  INTEGER  value=2
+1:10  FLOAT  value=1 (format=e)
+1:12  IDENTIFIER  value="foo"
+1:16  FLOAT  value=1
+1:19  IDENTIFIER  value="sin"
+1:23  INTEGER  value=255
+1:28  IDENTIFIER  value="sqrt"
+1:33  ERROR  value="Missing exponent digits" lexeme="1.0e-"
+1:38  IDENTIFIER  value="foo"
+1:42  FLOAT  value=1
+1:45  IDENTIFIER  value="E3"
+11 tokens, 1 lexical errors

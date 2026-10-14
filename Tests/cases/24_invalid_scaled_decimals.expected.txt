@@ -1,0 +1,8 @@
+1:1  SCALED_DECIMAL  value=1.25 (scale=1)
+2:1  INTEGER  value=12
+2:3  IDENTIFIER  value="sfoo"
+3:1  INTEGER  value=12
+3:3  IDENTIFIER  value="s_2"
+4:1  SCALED_DECIMAL  value=1 (scale=1000001)
+5:1  INTEGER  value=7
+7 tokens, 0 lexical errors

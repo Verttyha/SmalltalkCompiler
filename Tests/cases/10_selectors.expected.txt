@@ -1,0 +1,8 @@
+1:1  SELECTOR_LITERAL  value="hello"
+2:1  SELECTOR_LITERAL  value="size"
+3:1  SELECTOR_LITERAL  value="self"
+4:1  SELECTOR_LITERAL  value="at:put:"
+5:1  SELECTOR_LITERAL  value="+"
+6:1  SELECTOR_LITERAL  value="<="
+7:1  SELECTOR_LITERAL  value=">>"
+7 tokens, 0 lexical errors

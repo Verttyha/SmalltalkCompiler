@@ -1,0 +1,10 @@
+1:1  INTEGER  value=1
+1:4  INTEGER  value=12
+1:9  INTEGER  value=175
+1:19  FLOAT  value=10.5 (format=e)
+1:28  SCALED_DECIMAL  value=1.2 (scale=10)
+1:36  INTEGER  value=0
+1:40  PERIOD  value=-
+1:41  ASSIGN  value=-
+1:42  IDENTIFIER  value="F"
+9 tokens, 0 lexical errors

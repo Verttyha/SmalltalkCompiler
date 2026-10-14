@@ -1,0 +1,6 @@
+1:1  FLOAT  value=3.1400000000000001
+2:1  FLOAT  value=1250 (format=e)
+3:1  FLOAT  value=0.01 (format=d)
+4:1  FLOAT  value=2 (format=q)
+5:1  FLOAT  value=0 (format=e)
+5 tokens, 0 lexical errors

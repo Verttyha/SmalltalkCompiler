@@ -1,0 +1,7 @@
+1:1  FLOAT  value=0.12244897959183673 (format=q)
+2:1  FLOAT  value=0.12244897959183673 (format=q)
+3:1  FLOAT  value=-0.12244897959183673 (format=q)
+4:1  FLOAT  value=1 (format=q)
+5:1  ERROR  value="Number is outside the supported range" lexeme="16r1.0q5000"
+6:1  FLOAT  value=0 (format=q)
+5 tokens, 1 lexical errors

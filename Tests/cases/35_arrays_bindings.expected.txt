@@ -1,0 +1,20 @@
+1:1  LBRACE  value=-
+1:2  INTEGER  value=1
+1:3  PERIOD  value=-
+1:5  INTEGER  value=2
+1:7  BINARY_SELECTOR  value="+"
+1:9  INTEGER  value=3
+1:10  RBRACE  value=-
+1:12  HASH  value=-
+1:13  LBRACE  value=-
+1:14  IDENTIFIER  value="Smalltalk"
+1:23  SCOPE_SEPARATOR  value=-
+1:24  IDENTIFIER  value="Integer"
+1:31  RBRACE  value=-
+1:33  HASH  value=-
+1:34  LBRACKET  value=-
+1:35  INTEGER  value=1
+1:37  INTEGER  value=2
+1:39  INTEGER  value=255
+1:42  RBRACKET  value=-
+19 tokens, 0 lexical errors

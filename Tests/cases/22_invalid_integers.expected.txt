@@ -1,0 +1,13 @@
+1:1  INTEGER  value=2
+1:5  INTEGER  value=2
+2:1  INTEGER  value=0
+3:1  ERROR  value="Radix must be 1..36" lexeme="37r"
+3:4  IDENTIFIER  value="A"
+4:1  ERROR  value="Missing integer digits" lexeme="16r"
+5:1  ERROR  value="Missing integer digits" lexeme="16r"
+5:4  IDENTIFIER  value="ff"
+6:1  INTEGER  value=255
+6:6  IDENTIFIER  value="z"
+7:1  INTEGER  value=255
+8:1  INTEGER  value=7
+9 tokens, 3 lexical errors

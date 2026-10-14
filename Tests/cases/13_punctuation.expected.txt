@@ -1,0 +1,11 @@
+1:1  LPAREN  value=-
+2:1  RPAREN  value=-
+3:1  LBRACKET  value=-
+4:1  RBRACKET  value=-
+5:1  HASH  value=-
+6:1  COLON  value=-
+7:1  PERIOD  value=-
+8:1  SEMICOLON  value=-
+9:1  RETURN  value=-
+10:1  ASSIGN  value=-
+10 tokens, 0 lexical errors

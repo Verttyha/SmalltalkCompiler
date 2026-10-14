@@ -1,0 +1,2 @@
+5:1  IDENTIFIER  value="x"
+1 tokens, 0 lexical errors

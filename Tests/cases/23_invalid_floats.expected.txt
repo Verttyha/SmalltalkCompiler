@@ -1,0 +1,12 @@
+1:1  FLOAT  value=1 (format=e)
+2:1  ERROR  value="Missing exponent digits" lexeme="1.0e-"
+3:1  FLOAT  value=1 (format=e)
+3:5  BINARY_SELECTOR  value="+"
+3:6  INTEGER  value=3
+4:1  ERROR  value="Missing exponent digits" lexeme="1.0e-"
+4:6  IDENTIFIER  value="foo"
+5:1  FLOAT  value=1000 (format=e)
+5:6  IDENTIFIER  value="tail"
+6:1  ERROR  value="Number is outside the supported range" lexeme="1.0e9999"
+7:1  INTEGER  value=7
+8 tokens, 3 lexical errors

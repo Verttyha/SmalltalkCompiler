@@ -1,0 +1,7 @@
+1:1  CHARACTER  value=90 (U+5A)
+1:4  CHARACTER  value=65 (U+41)
+1:7  CHARACTER  value=60 (U+3C)
+1:9  INTEGER  value=1071
+1:13  BINARY_SELECTOR  value=">"
+1:15  IDENTIFIER  value="x"
+6 tokens, 0 lexical errors

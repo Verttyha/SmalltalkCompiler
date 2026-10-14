@@ -1,0 +1,14 @@
+1:1  HASH  value=-
+1:2  LPAREN  value=-
+1:3  INTEGER  value=1
+1:5  SELECTOR_LITERAL  value="size"
+1:11  HASH  value=-
+1:12  LPAREN  value=-
+1:13  INTEGER  value=2
+1:14  RPAREN  value=-
+1:15  RPAREN  value=-
+2:1  HASH  value=-
+2:3  LPAREN  value=-
+2:4  INTEGER  value=3
+2:5  RPAREN  value=-
+13 tokens, 0 lexical errors
